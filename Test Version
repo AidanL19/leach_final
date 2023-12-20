@@ -1,0 +1,569 @@
+//Declaration and assignment of variables
+var currentScene = 0;
+var numGuesses = 0;
+var code = [1, 2, 3, 4];
+var pickRed = false;
+var pickGreen = false;
+var pickBlue = false;
+var pickYellow = false;
+var changeRed = false;
+var changeGreen = false;
+var changeBlue = false;
+var changeYellow = false;
+var numCorrect = 0;
+var numIncorrect = 0;
+var numRow = 0;
+var numCol = 0;
+var guessCode = [[0, 0, 0, 0],[0, 0, 0, 0],[0, 0, 0, 0],[0, 0, 0, 0]];
+var results = [0, 0, 0, 0];
+
+//Function that draws the head of the bitmoji
+var drawBitmojiHead = function(h, x, y) {
+    noStroke();
+    fill(235,200,155);
+    ellipse(x+(h/100*100),y,h/100*85,h/100*100); //head
+    ellipse(x+(h/100*55),y+(h/100*5),h/100*15,h/100*25); //left ear
+    ellipse(x+(h/100*145),y+(h/100*5),h/100*15,h/100*25); //right ear
+    fill(255,255,255);
+    ellipse(x+(h/100*83),y-(h/100*5),h/100*12,h/100*12); //left eye
+    ellipse(x+(h/100*113),y-(h/100*5),h/100*12,h/100*12); //right eye
+    fill(70,120,170);
+    ellipse(x+(h/100*83),y-(h/100*5),h/100*4,h/100*4); //left pupil
+    ellipse(x+(h/100*113),y-(h/100*5),h/100*4,h/100*4); //right pupil
+    stroke(0,0,0);
+    line(x+(h/100*80),y+(h/100*20),x+(h/100*120),y+(h/100*20)); //mouth line
+    fill(255, 255, 255);
+    arc(x+(h/100*100),y+(h/100*21),h/100*45,h/100*25,1,180); //mouth arc
+    line(x+(h/100*95),y,x+(h/100*110),y+(h/100*15)); //nose line 1
+    line(x+(h/100*95),y+(h/100*15),x+(h/100*110),y+(h/100*15)); //nose line 2
+    fill(55,80,180);
+    arc(x+(h/100*100),y-(h/100*20),h/100*90,h/100*-75,1,180); //hat
+    stroke(135, 60, 10);
+    line(x+(h/100*60),y-(h/100*20),x+(h/100*45),y); //left hair
+    line(x+(h/100*140),y-(h/100*20),x+(h/100*155),y); //right hair
+};
+
+//Function that draws the body of the bitmoji
+var drawBitmojiBody = function(h, x, y) { 
+    noStroke();
+    fill(55,80,180);
+    rect(x+(h/100*37),y+(h/100*50),h/100*125,h/100*100); //body
+    stroke(255, 255, 255);
+    line(x+(h/100*50),y+(h/100*120),x+(h/100*70),y+(h/100*60)); //part of A
+    line(x+(h/100*90),y+(h/100*120),x+(h/100*70),y+(h/100*60)); //part of A
+    line(x+(h/100*82),y+(h/100*95),x+(h/100*57),y+(h/100*95)); //part of A
+    line(x+(h/100*110),y+(h/100*60),x+(h/100*110),y+(h/100*120)); //part of L
+    line(x+(h/100*110),y+(h/100*120),x+(h/100*145),y+(h/100*120)); //part of L
+};
+
+//Function that draws the whole bitmoji using the other two functions
+var drawBitmoji = function(h, x, y) {
+    drawBitmojiHead(h, x, y);
+    drawBitmojiBody(h, x, y);
+};
+
+//Square Button constructor
+var SquareButton = function(x, y, width, height, label, onClick) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.label = label;
+    this.onClick = onClick;
+};
+
+//Circle Button constructor 
+var CircleButton = function(x, y, width, height, color, onClick) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.color = color;
+    this.onClick = onClick;
+};
+
+//Function that is a method defined for the SquareButton object which draws the square buttons
+SquareButton.prototype.drawSquareButton = function() {
+    stroke(0, 0, 0);
+    fill(255, 255, 255);
+    rect(this.x+20, this.y+25, this.width, this.height);
+    fill(0, 0, 0);
+    textSize(19);
+    textAlign(CENTER);
+    text(this.label, this.x+this.height, this.y+this.height/1.1);
+};
+
+//Function that is a method defined for the CircleButton object which draws the circle buttons
+CircleButton.prototype.drawCircleButton = function() {
+    stroke(0, 0, 0);
+    fill(this.color[0], this.color[1], this.color[2]);
+    ellipse(this.x, this.y, this.width, this.height);
+};
+
+//Function that is a method defined for the SquareButton object which checks if the user's mouse is inside the square
+SquareButton.prototype.isMouseInsideSquare = function() {
+    return mouseX > this.x && mouseX < (this.x + this.width) && mouseY > this.y && mouseY < (this.y + this.height);
+};
+
+//Function that is a method defined for the SquareButton object which checks if isMouseInsideSquare is true and if so calls its onClick function
+SquareButton.prototype.handleMouseClickSquare = function() {
+    if (this.isMouseInsideSquare()) {
+        this.onClick();
+    }
+};
+
+//Function that is a method defined for the CircleButton object which checks if the user's mouse is inside the circle
+CircleButton.prototype.isMouseInsideCircle = function() {
+    return mouseX > (this.x - (this.width/2)) && mouseX < (this.x + (this.width/2)) && mouseY > (this.y - (this.height/2)) && mouseY < (this.y + (this.height/2));
+};
+
+//Function that is a method defined for the CircleButton object which checks if isMouseInsideCircle is true and if so calls its onClick function
+CircleButton.prototype.handleMouseClickCircle = function() {
+    if (this.isMouseInsideCircle()) {
+        this.onClick();
+    }
+};
+
+//Variable that is an instance of the SquareButton class
+var startButton = new SquareButton(117, 280, 110, 75, "Start Button", function() {
+    currentScene += 1;
+});
+
+//Function that displays the splash screen for the user by giving them instructions and a start button to click
+var splashScreen = function() {
+    background(255, 255, 255);
+    drawBitmoji(50, 142, 30);
+    fill(0, 0, 0);
+    textSize(40);
+    text("Mastermind", 190, 135);
+    textSize(14);
+    text("By: Aidan Leach", 190, 153);
+    text("Welcome to Mastermind. Try to guess the random code of \ncolors. In order to guess, you must select a color from \nthe bottom of the page and then fill out the rows starting with \nthe top row and then going down. After each time filling \nout a row, select the check button to see how many you \nhave in the right spot. All colors are used and there is no \npossibility of repeat colors in the code. Good luck and have fun.", 202, 172);
+    
+    startButton.drawSquareButton();
+};
+
+//Function that randomizes an array of 1, 2, 3, and 4 as the code the user is trying to crack
+var randomCode = function() {
+    for (var i = code.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = code[i];
+        code[i] = code[j];
+        code[j] = temp;
+    }    
+};
+
+//Function that returns 1 if a color parameter is red, returns 2 if a color parameter is green, returns 3 if a color parameter is blue, returns 4 if a color parameter is yellow, and returns 0 if a color parameter is not any of those colors.
+var colorToNumber = function(color) {
+    if (color[0] === 255 && color[1] === 0 && color[2] === 0) {
+        return 1;
+    } 
+    else if (color[0] === 0 && color[1] === 255 && color[2] === 0) {
+        return 2;
+    } 
+    else if (color[0] === 0 && color[1] === 0 && color[2] === 255) {
+        return 3; 
+    } 
+    else if (color[0] === 255 && color[1] === 255 && color[2] === 0) {
+        return 4;
+    }
+    
+    return 0;
+};
+
+//Declaration of variables
+var r1c1;
+var r2c1;
+var r3c1;
+var r4c1;
+var r5c1;
+var r1c2;
+var r2c2;
+var r3c2;
+var r4c2;
+var r5c2;
+var r1c3;
+var r2c3;
+var r3c3;
+var r4c3;
+var r5c3;
+var r1c4;
+var r2c4;
+var r3c4;
+var r4c4;
+var r5c4;
+
+//Function that changes the color of the circles when they are clicked based on the color of the mouse as well as updates the guess code for the user to compare with the actual code they need to crack when they click the check button
+var changeColor = function() {
+    var localColor;
+    
+    if (changeRed) {
+        localColor = [255, 0, 0];
+    } 
+    else if (changeGreen) {
+        localColor = [0, 255, 0];
+    } 
+    else if (changeBlue) {
+        localColor = [0, 0, 255];
+    } 
+    else if (changeYellow) {
+        localColor = [255, 255, 0];
+    }
+
+    if (localColor) {
+        if (numRow === 1 && numCol === 1) {
+            r1c1.color = localColor;
+        } 
+        else if (numRow === 2 && numCol === 1) {
+            r2c1.color = localColor;
+        }
+        else if (numRow === 3 && numCol === 1) {
+            r3c1.color = localColor;
+        }
+        else if (numRow === 4 && numCol === 1) {
+            r4c1.color = localColor;
+        }
+        else if (numRow === 1 && numCol === 2) {
+            r1c2.color = localColor;
+        }
+        else if (numRow === 2 && numCol === 2) {
+            r2c2.color = localColor;
+        }
+        else if (numRow === 3 && numCol === 2) {
+            r3c2.color = localColor;
+        }
+        else if (numRow === 4 && numCol === 2) {
+            r4c2.color = localColor;
+        }
+        else if (numRow === 1 && numCol === 3) {
+            r1c3.color = localColor;
+        }
+        else if (numRow === 2 && numCol === 3) {
+            r2c3.color = localColor;
+        }
+        else if (numRow === 3 && numCol === 3) {
+            r3c3.color = localColor;
+        }
+        else if (numRow === 4 && numCol === 3) {
+            r4c3.color = localColor;
+        }
+        else if (numRow === 1 && numCol === 4) {
+            r1c4.color = localColor;
+        }
+        else if (numRow === 2 && numCol === 4) {
+            r2c4.color = localColor;
+        }
+        else if (numRow === 3 && numCol === 4) {
+            r3c4.color = localColor;
+        }
+        else if (numRow === 4 && numCol === 4) {
+            r4c4.color = localColor;
+        }
+        
+        var colorNum = colorToNumber(localColor);
+        var rowIndex = numRow - 1;
+        var colIndex = numCol - 1;
+        guessCode[rowIndex][colIndex] = colorNum; 
+    }
+};
+
+//Function that checks the amount of correct and incorrect matches between the guess code and the actualy code, increments the amount of times the user has guessed, and updates the results array so that their results can be printed each time after hitting the check button
+var checkCorrect = function(currentRow) {
+    numCorrect = 0;
+    numIncorrect = 0;
+    
+    for (var i = 0; i < code.length; i++) {
+        if (guessCode[currentRow][i] === code[i]) {
+            numCorrect++;    
+        }
+        else {
+            numIncorrect++;    
+        }
+    }
+    
+    numGuesses++;
+    results[currentRow] = numCorrect;
+};
+
+//Function that is used to determine if the color of the mouse should change to red
+var pickRedButton = function() {
+    pickRed = true;
+    pickGreen = false;
+    pickBlue = false;
+    pickYellow = false;
+};
+
+//Function that is used to determine if the color of the mouse should change to green
+var pickGreenButton = function() {
+    pickRed = false;
+    pickGreen = true;
+    pickBlue = false;
+    pickYellow = false;   
+};
+
+//Function that is used to determine if the color of the mouse should change to blue
+var pickBlueButton = function() {
+    pickRed = false;
+    pickGreen = false;
+    pickBlue = true;
+    pickYellow = false;
+};
+
+//Function that is used to determine if the color of the mouse should change to yellow
+var pickYellowButton = function() {
+    pickRed = false;
+    pickGreen = false;
+    pickBlue = false;
+    pickYellow = true;  
+};
+
+//Variable that is an instance of the SquareButton class
+var checkButton = new SquareButton(270, 303, 100, 68, "Check", function() {
+    checkCorrect(numRow - 1);
+});
+//Tons of variables that are all instances of the CircleButton class
+r1c1 = new CircleButton(40, (1*1.8)*40, 60, 60, [255, 255, 255], function() { 
+    changeColor();
+});
+r2c1 = new CircleButton(40, (2*1.8)*40, 60, 60, [255, 255, 255], function() {
+    changeColor();
+});
+r3c1 = new CircleButton(40, (3*1.8)*40, 60, 60, [255, 255, 255], function() {
+    changeColor();
+});
+r4c1 = new CircleButton(40, (4*1.8)*40, 60, 60, [255, 255, 255], function() {
+    changeColor();
+});
+r5c1 = new CircleButton(40, (5*1.8)*40, 60, 60, [255, 0, 0], function() {
+    pickRedButton();
+});
+r1c2 = new CircleButton(110, (1*1.8)*40, 60, 60, [255, 255, 255], function() {
+    changeColor();
+});
+r2c2 = new CircleButton(110, (2*1.8)*40, 60, 60, [255, 255, 255], function() {
+    changeColor();
+});
+r3c2 = new CircleButton(110, (3*1.8)*40, 60, 60, [255, 255, 255], function() {
+    changeColor();
+});
+r4c2 = new CircleButton(110, (4*1.8)*40, 60, 60, [255, 255, 255], function() {
+    changeColor();
+});
+r5c2 = new CircleButton(110, (5*1.8)*40, 60, 60, [0, 255, 0], function() {
+    pickGreenButton();
+});
+r1c3 = new CircleButton(180, (1*1.8)*40, 60, 60, [255, 255, 255], function() {
+    changeColor();
+});
+r2c3 = new CircleButton(180, (2*1.8)*40, 60, 60, [255, 255, 255], function() {
+    changeColor();
+});
+r3c3 = new CircleButton(180, (3*1.8)*40, 60, 60, [255, 255, 255], function() {
+    changeColor();
+});
+r4c3 = new CircleButton(180, (4*1.8)*40, 60, 60, [255, 255, 255], function() {
+    changeColor();
+});
+r5c3 = new CircleButton(180, (5*1.8)*40, 60, 60, [0, 0, 255], function() {
+    pickBlueButton();
+});
+r1c4 = new CircleButton(250, (1*1.8)*40, 60, 60, [255, 255, 255], function() {
+    changeColor();
+});
+r2c4 = new CircleButton(250, (2*1.8)*40, 60, 60, [255, 255, 255], function() {
+    changeColor();
+});
+r3c4 = new CircleButton(250, (3*1.8)*40, 60, 60, [255, 255, 255], function() {
+    changeColor();
+});
+r4c4 = new CircleButton(250, (4*1.8)*40, 60, 60, [255, 255, 255], function() {
+    changeColor();
+});
+r5c4 = new CircleButton(250, (5*1.8)*40, 60, 60, [255, 255, 0], function() {
+    pickYellowButton();
+});
+
+//Call to the randomCode function
+randomCode();
+
+//Function that displays the game screen for the user by drawing all the buttons they can click, prints results and messages based on the results array and the numGuesses varaible, and changes the mouse color depending on results for the 4 previous functions
+var gameScreen = function() {
+    background(255, 255, 255);
+    stroke(0, 0, 0);
+    line(0, 323, 400, 323);
+    
+    checkButton.drawSquareButton();
+    fill(r1c1.color);
+    r1c1.drawCircleButton();
+    fill(r2c1.color);
+    r2c1.drawCircleButton();
+    fill(r3c1.color);
+    r3c1.drawCircleButton();
+    fill(r4c1.color);
+    r4c1.drawCircleButton();
+    fill(r5c1.color);
+    r5c1.drawCircleButton();
+    fill(r1c2.color);
+    r1c2.drawCircleButton();
+    fill(r2c2.color);
+    r2c2.drawCircleButton();
+    fill(r3c2.color);
+    r3c2.drawCircleButton();
+    fill(r4c2.color);
+    r4c2.drawCircleButton();
+    fill(r5c2.color);
+    r5c2.drawCircleButton();
+    fill(r1c3.color);
+    r1c3.drawCircleButton();
+    fill(r2c3.color);
+    r2c3.drawCircleButton();
+    fill(r3c3.color);
+    r3c3.drawCircleButton();
+    fill(r4c3.color);
+    r4c3.drawCircleButton();
+    fill(r5c3.color);
+    r5c3.drawCircleButton();
+    fill(r1c4.color);
+    r1c4.drawCircleButton();
+    fill(r2c4.color);
+    r2c4.drawCircleButton();
+    fill(r3c4.color);
+    r3c4.drawCircleButton();
+    fill(r4c4.color);
+    r4c4.drawCircleButton();
+    fill(r5c4.color);
+    r5c4.drawCircleButton();
+   
+    fill(0, 0, 0);
+    
+    textSize(30);
+    
+    if (numGuesses > 0) {
+        text(results[0], 340, 83);    
+    }
+    if (numGuesses > 1) {
+        text(results[1], 340, 157);    
+    }
+    if (numGuesses > 2) {
+        text(results[2], 340, 231);    
+    }
+    if (numGuesses > 3) {
+        text(results[3], 340, 301);    
+    }
+    
+    textSize(14);
+    
+    if (results[numGuesses - 1] === 4) {
+        text("Great job! You figured out the code in " + numGuesses + " tries.\nPress restart to try again.", 185, 16);    
+    }
+    else if (!results.includes(4) && numGuesses === 4) {
+        text("Better luck next time. You weren't able to figure out the \ncode. Press restart to try again.", 185, 16);    
+    }
+    else {
+        text("Remember that you must start by filling out the top row first,\nchecking, and then repeating that same process downward.", 185, 16);      
+    }
+    
+    //Line used to test results when you can actually see what the code is and should stay commented out when actually trying to play the game
+    text(code, 340, 387);
+    
+    noStroke();
+    if (pickRed) {
+        fill(255, 0, 0);
+        ellipse(mouseX, mouseY, 30, 30);
+        changeRed = true;
+        changeGreen = false;
+        changeBlue = false;
+        changeYellow = false;
+    }
+    if (pickGreen) {
+        fill(0, 255, 0);
+        ellipse(mouseX, mouseY, 30, 30);
+        changeGreen = true;
+        changeRed = false;
+        changeBlue = false;
+        changeYellow = false;
+    }
+    if (pickBlue) {
+        fill(0, 0, 255);
+        ellipse(mouseX, mouseY, 30, 30);
+        changeBlue = true;
+        changeRed = false;
+        changeGreen = false;
+        changeYellow = false;
+    }
+    if (pickYellow) {
+        fill(255, 255, 0);
+        ellipse(mouseX, mouseY, 30, 30);
+        changeYellow = true;
+        changeRed = false;
+        changeGreen = false;
+        changeBlue = false;
+    }
+};
+
+//Function that is called when the mouse is clicked that handles the mouseClicks for the startButton, checkButton, and all of the other circle buttons depending on the currentScene variable as well as updates the numRow and numCol variables depending on what buttons the mouse is inside
+var mouseClicked = function() {
+    if (currentScene === 0) {
+        startButton.handleMouseClickSquare();    
+    }
+    if (currentScene === 1) {
+        checkButton.handleMouseClickSquare(); 
+        
+        if (r1c1.isMouseInsideCircle() || r1c2.isMouseInsideCircle() || r1c3.isMouseInsideCircle() || r1c4.isMouseInsideCircle()) {
+            numRow = 1;   
+        }
+        if (r2c1.isMouseInsideCircle() || r2c2.isMouseInsideCircle() || r2c3.isMouseInsideCircle() || r2c4.isMouseInsideCircle()) {
+            numRow = 2;   
+        }
+        if (r3c1.isMouseInsideCircle() || r3c2.isMouseInsideCircle() || r3c3.isMouseInsideCircle() || r3c4.isMouseInsideCircle()) {
+            numRow = 3;   
+        }
+        if (r4c1.isMouseInsideCircle() || r4c2.isMouseInsideCircle() || r4c3.isMouseInsideCircle() || r4c4.isMouseInsideCircle()) {
+            numRow = 4;   
+        }
+        
+        if (r1c1.isMouseInsideCircle() || r2c1.isMouseInsideCircle() || r3c1.isMouseInsideCircle() || r4c1.isMouseInsideCircle()) {
+            numCol = 1;   
+        }
+        if (r1c2.isMouseInsideCircle() || r2c2.isMouseInsideCircle() || r3c2.isMouseInsideCircle() || r4c2.isMouseInsideCircle()) {
+            numCol = 2;   
+        }
+        if (r1c3.isMouseInsideCircle() || r2c3.isMouseInsideCircle() || r3c3.isMouseInsideCircle() || r4c3.isMouseInsideCircle()) {
+            numCol = 3;   
+        }
+        if (r1c4.isMouseInsideCircle() || r2c4.isMouseInsideCircle() || r3c4.isMouseInsideCircle() || r4c4.isMouseInsideCircle()) {
+            numCol = 4;   
+        }
+        
+        r1c1.handleMouseClickCircle();
+        r2c1.handleMouseClickCircle();
+        r3c1.handleMouseClickCircle();
+        r4c1.handleMouseClickCircle();
+        r5c1.handleMouseClickCircle();
+        r1c2.handleMouseClickCircle();
+        r2c2.handleMouseClickCircle();
+        r3c2.handleMouseClickCircle();
+        r4c2.handleMouseClickCircle();
+        r5c2.handleMouseClickCircle();
+        r1c3.handleMouseClickCircle();
+        r2c3.handleMouseClickCircle();
+        r3c3.handleMouseClickCircle();
+        r4c3.handleMouseClickCircle();
+        r5c3.handleMouseClickCircle();
+        r1c4.handleMouseClickCircle();
+        r2c4.handleMouseClickCircle();
+        r3c4.handleMouseClickCircle();
+        r4c4.handleMouseClickCircle();
+        r5c4.handleMouseClickCircle();
+    }
+};
+
+//Function that repeatedly draws either the splashScreen or gameScreen functions depending on what the currentScene variable is equal to
+var draw = function() {
+    if (currentScene === 0) {
+        splashScreen();   
+    }
+    else {
+        gameScreen();   
+    }
+};
